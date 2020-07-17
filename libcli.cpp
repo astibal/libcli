@@ -5,7 +5,6 @@
 #include <winsock2.h>
 #endif
 
-#define _GNU_SOURCE
 #include <errno.h>
 #include <memory.h>
 #include <stdarg.h>
@@ -203,7 +202,7 @@ char *cli_command_name(struct cli_def *cli, struct cli_command *command) {
   }
   name = cli->commandname;
 
-  if (!(name = calloc(1, 1))) return NULL;
+  if (!(name = static_cast<char*>(calloc(1, 1)))) return NULL;
 
   while (command) {
     o = name;
@@ -229,7 +228,7 @@ void cli_set_enable_callback(struct cli_def *cli, int (*enable_callback)(const c
 
 void cli_allow_user(struct cli_def *cli, const char *username, const char *password) {
   struct unp *u, *n;
-  if (!(n = malloc(sizeof(struct unp)))) {
+  if (!(n = static_cast<unp*>(malloc(sizeof(struct unp))))) {
     fprintf(stderr, "Couldn't allocate memory for user: %s", strerror(errno));
     return;
   }
@@ -410,7 +409,7 @@ struct cli_command *cli_register_command(struct cli_def *cli, struct cli_command
   struct cli_command *c;
 
   if (!command) return NULL;
-  if (!(c = calloc(sizeof(struct cli_command), 1))) return NULL;
+  if (!(c = static_cast<cli_command*>(calloc(sizeof(struct cli_command), 1)))) return NULL;
   c->command_type = CLI_REGULAR_COMMAND;
   c->callback = callback;
   c->next = NULL;
@@ -581,10 +580,10 @@ struct cli_def *cli_init() {
   struct cli_def *cli;
   struct cli_command *c;
 
-  if (!(cli = calloc(sizeof(struct cli_def), 1))) return 0;
+  if (!(cli = static_cast<cli_def*>(calloc(sizeof(struct cli_def), 1)))) return 0;
 
   cli->buf_size = 1024;
-  if (!(cli->buffer = calloc(cli->buf_size, 1))) {
+  if (!(cli->buffer = static_cast<char*>(calloc(cli->buf_size, 1)))) {
     free_z(cli);
     return 0;
   }
@@ -734,7 +733,7 @@ static char *cli_int_return_newword(const char *start, const char *end) {
 
   // allocate space (including terminal NULL, then go through and deal with escaping characters as we copy them
 
-  if (!(newword = calloc(len + 1, 1))) return 0;
+  if (!(newword = static_cast<char*>(calloc(len + 1, 1)))) return 0;
   to = newword;
   while (start != end) {
     if (*start == '\\')
@@ -819,7 +818,7 @@ static char *join_words(int argc, char **argv) {
     len += strlen(argv[i]);
   }
 
-  p = malloc(len + 1);
+  p = static_cast<char*>(malloc(len + 1));
   p[0] = 0;
 
   for (i = 0; i < argc; i++) {
@@ -1035,7 +1034,7 @@ int cli_loop(struct cli_def *cli, int sockfd) {
     _write(sockfd, negotiate, strlen(negotiate));
   }
 
-  if ((cmd = malloc(CLI_MAX_LINE_LENGTH)) == NULL) return CLI_ERROR;
+  if ((cmd = static_cast<char*>(malloc(CLI_MAX_LINE_LENGTH))) == NULL) return CLI_ERROR;
 
 #ifdef WIN32
   /*
@@ -1885,7 +1884,7 @@ int cli_match_filter_init(struct cli_def *cli, int argc, char **argv, struct cli
   char *search_flags = cli_get_optarg_value(cli, "search_flags", NULL);
 
   filt->filter = cli_match_filter;
-  filt->data = state = calloc(sizeof(struct cli_match_filter_state), 1);
+  filt->data = state = static_cast<cli_match_filter_state*>(calloc(sizeof(struct cli_match_filter_state), 1));
   if (!state) return CLI_ERROR;
 
   if (!strcmp(cli->pipeline->current_stage->words[0], "include")) {
@@ -1936,7 +1935,7 @@ int cli_match_filter_init(struct cli_def *cli, int argc, char **argv, struct cli
 }
 
 int cli_match_filter(UNUSED(struct cli_def *cli), const char *string, void *data) {
-  struct cli_match_filter_state *state = data;
+  struct cli_match_filter_state *state = static_cast<cli_match_filter_state*>(data);
   int r = CLI_ERROR;
 
   if (!string) {
@@ -1978,7 +1977,7 @@ int cli_range_filter_init(struct cli_def *cli, int argc, char **argv, struct cli
 
   // Do not have to check from/to since we would not have gotten here if we were missing a required argument.
   filt->filter = cli_range_filter;
-  filt->data = state = calloc(sizeof(struct cli_range_filter_state), 1);
+  filt->data = state = static_cast<cli_range_filter_state*>(calloc(sizeof(struct cli_range_filter_state), 1));
   if (state) {
     state->from = from;
     state->to = to;
@@ -1991,7 +1990,7 @@ int cli_range_filter_init(struct cli_def *cli, int argc, char **argv, struct cli
 }
 
 int cli_range_filter(UNUSED(struct cli_def *cli), const char *string, void *data) {
-  struct cli_range_filter_state *state = data;
+  struct cli_range_filter_state *state = static_cast<cli_range_filter_state*>(data);
   int r = CLI_ERROR;
 
   if (!string) {
@@ -2025,7 +2024,7 @@ int cli_count_filter_init(struct cli_def *cli, int argc, UNUSED(char **argv), st
 }
 
 int cli_count_filter(struct cli_def *cli, const char *string, void *data) {
-  int *count = data;
+  int *count = static_cast<int*>(data);
 
   if (!string) {
     // Print count
@@ -2076,7 +2075,7 @@ struct cli_command *cli_register_filter(struct cli_def *cli, const char *command
   struct cli_command *c;
 
   if (!command) return NULL;
-  if (!(c = calloc(sizeof(struct cli_command), 1))) return NULL;
+  if (!(c = static_cast<cli_command*>(calloc(sizeof(struct cli_command), 1)))) return NULL;
 
   c->command_type = CLI_FILTER_COMMAND;
   c->init = init;
@@ -2189,7 +2188,7 @@ struct cli_optarg *cli_register_optarg(struct cli_command *cmd, const char *name
       goto CLEANUP;
     }
   }
-  if (!(optarg = calloc(sizeof(struct cli_optarg), 1))) goto CLEANUP;
+  if (!(optarg = static_cast<cli_optarg*>(calloc(sizeof(struct cli_optarg), 1)))) goto CLEANUP;
   if (!(optarg->name = strdup(name))) goto CLEANUP;
   if (help && !(optarg->help = strdup(help))) goto CLEANUP;
 
@@ -2434,7 +2433,7 @@ struct cli_command *cli_int_register_buildmode_command(struct cli_def *cli, stru
   struct cli_command *c;
 
   if (!command) return NULL;
-  if (!(c = calloc(sizeof(struct cli_command), 1))) return NULL;
+  if (!(c = static_cast<cli_command*>(calloc(sizeof(struct cli_command), 1)))) return NULL;
 
   c->flags = flags;
   c->callback = callback;
@@ -2992,7 +2991,7 @@ int cli_int_execute_pipeline(struct cli_def *cli, struct cli_pipeline *pipeline)
     struct cli_pipeline_stage *stage = &pipeline->stage[stage_num];
     pipeline->current_stage = stage;
     cli->found_optargs = stage->found_optargs;
-    *filt = calloc(sizeof(struct cli_filter), 1);
+    *filt = static_cast<cli_filter*>(calloc(sizeof(struct cli_filter), 1));
     if (*filt) {
       if ((rc = stage->command->init(cli, stage->num_words, stage->words, *filt) != CLI_OK)) {
         break;
