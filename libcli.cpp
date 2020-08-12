@@ -20,6 +20,10 @@
 #ifndef WIN32
 #include <regex.h>
 #endif
+#ifdef __linux__
+#define USE_EPOLL
+#include <sys/epoll.h>
+#endif
 #include "libcli.h"
 
 #ifdef __GNUC__
@@ -1062,7 +1066,17 @@ int cli_loop(struct cli_def *cli, int sockfd) {
   // No auth required?
   if (!cli->users && !cli->auth_callback) cli->state = STATE_NORMAL;
 
-  while (1) {
+    #ifdef USE_EPOLL
+    int epoll_fd = epoll_create(1);
+    epoll_event edata{0};
+    edata.events = EPOLLIN;
+    edata.data.fd = sockfd;
+
+    epoll_ctl(epoll_fd, EPOLL_CTL_ADD, sockfd, &edata);
+    #endif
+
+
+    while (1) {
     signed int in_history = 0;
     unsigned char lastchar = '\0';
     unsigned char c = '\0';
@@ -1126,6 +1140,8 @@ int cli_loop(struct cli_def *cli, int sockfd) {
         cli->showprompt = 0;
       }
 
+      #ifndef USE_EPOLL
+      fd_set r;
       FD_ZERO(&r);
       FD_SET(sockfd, &r);
 
@@ -1136,6 +1152,18 @@ int cli_loop(struct cli_def *cli, int sockfd) {
         l = -1;
         break;
       }
+      #else
+      constexpr int max_events = 5;
+      epoll_event ee[max_events];
+
+      sr = epoll_wait(epoll_fd, ee, max_events, tm.tv_sec * 1000);
+      if(sr < 0) {
+          if (errno == EINTR) continue;
+          perror("epoll");
+          l = -1;
+          break;
+      }
+      #endif
 
       if (sr == 0) {
         // Timeout every second
@@ -1754,6 +1782,12 @@ int cli_loop(struct cli_def *cli, int sockfd) {
 
   fclose(cli->client);
   cli->client = 0;
+
+
+  #ifdef USE_EPOLL
+  close(epoll_fd);
+  #endif
+
   return CLI_OK;
 }
 
