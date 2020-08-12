@@ -47,9 +47,9 @@ int vasprintf(char **strp, const char *fmt, va_list args) {
 
   // Do initial vsnprintf on a copy of the va_list
   va_copy(argCopy, args);
-  size = vsnprintf(NULL, 0, fmt, argCopy);
+  size = vsnprintf(nullptr, 0, fmt, argCopy);
   va_end(argCopy);
-  if ((*strp = malloc(size + 1)) == NULL) {
+  if ((*strp = malloc(size + 1)) == nullptr) {
     return -1;
   }
 
@@ -198,18 +198,18 @@ char *cli_command_name(struct cli_def *cli, struct cli_command *command) {
 
   if (cli->commandname) {
     free(cli->commandname);
-    cli->commandname = NULL;
+    cli->commandname = nullptr;
   }
   name = cli->commandname;
 
-  if (!(name = static_cast<char*>(calloc(1, 1)))) return NULL;
+  if (!(name = static_cast<char*>(calloc(1, 1)))) return nullptr;
 
   while (command) {
     o = name;
     if (asprintf(&name, "%s%s%s", command->command, *o ? " " : "", o) == -1) {
       fprintf(stderr, "Couldn't allocate memory for command_name: %s", strerror(errno));
       free(o);
-      return NULL;
+      return nullptr;
     }
     command = command->parent;
     free(o);
@@ -243,7 +243,7 @@ void cli_allow_user(struct cli_def *cli, const char *username, const char *passw
     free(n);
     return;
   }
-  n->next = NULL;
+  n->next = nullptr;
 
   if (!cli->users) {
     cli->users = n;
@@ -262,7 +262,7 @@ void cli_allow_enable(struct cli_def *cli, const char *password) {
 }
 
 void cli_deny_user(struct cli_def *cli, const char *username) {
-  struct unp *u, *p = NULL;
+  struct unp *u, *p = nullptr;
   if (!cli->users) return;
   for (u = cli->users; u; u = u->next) {
     if (strcmp(username, u->username) == 0) {
@@ -348,7 +348,7 @@ int cli_set_configmode(struct cli_def *cli, int mode, const char *config_desc) {
   if (mode != old) {
     if (!cli->mode) {
       // Not config mode
-      cli_set_modestring(cli, NULL);
+      cli_set_modestring(cli, nullptr);
     } else if (config_desc && *config_desc) {
       char string[64];
       snprintf(string, sizeof(string), "(config-%s)", config_desc);
@@ -364,7 +364,7 @@ int cli_set_configmode(struct cli_def *cli, int mode, const char *config_desc) {
 }
 
 void cli_register_command_core(struct cli_def *cli, struct cli_command *parent, struct cli_command *c) {
-  struct cli_command *p = NULL;
+  struct cli_command *p = nullptr;
 
   if (!c) return;
 
@@ -391,7 +391,7 @@ void cli_register_command_core(struct cli_def *cli, struct cli_command *parent, 
   }
 
   /*
-   * If we have a chain (p is not null), run down to the last element and place this command at the end
+   * If we have a chain (p is not nullptr), run down to the last element and place this command at the end
    */
   for (; p && p->next; p = p->next)
     ;
@@ -408,14 +408,14 @@ struct cli_command *cli_register_command(struct cli_def *cli, struct cli_command
                                          int privilege, int mode, const char *help) {
   struct cli_command *c;
 
-  if (!command) return NULL;
-  if (!(c = static_cast<cli_command*>(calloc(sizeof(struct cli_command), 1)))) return NULL;
+  if (!command) return nullptr;
+  if (!(c = static_cast<cli_command*>(calloc(sizeof(struct cli_command), 1)))) return nullptr;
   c->command_type = CLI_REGULAR_COMMAND;
   c->callback = callback;
-  c->next = NULL;
+  c->next = nullptr;
   if (!(c->command = strdup(command))) {
     free(c);
-    return NULL;
+    return nullptr;
   }
 
   c->privilege = privilege;
@@ -423,7 +423,7 @@ struct cli_command *cli_register_command(struct cli_def *cli, struct cli_command
   if (help && !(c->help = strdup(help))) {
     free(c->command);
     free(c);
-    return NULL;
+    return nullptr;
   }
 
   cli_register_command_core(cli, parent, c);
@@ -459,8 +459,8 @@ static void cli_free_command(struct cli_def *cli, struct cli_command *cmd) {
   if (cmd == cli->commands) {
     cli->commands = cmd->next;
     if (cmd->next) {
-      cmd->next->parent = NULL;
-      cmd->next->previous = NULL;
+      cmd->next->parent = nullptr;
+      cmd->next->previous = nullptr;
     }
   } else {
     if (cmd->previous) {
@@ -474,7 +474,7 @@ static void cli_free_command(struct cli_def *cli, struct cli_command *cmd) {
 }
 
 int cli_int_unregister_command_core(struct cli_def *cli, const char *command, int command_type) {
-  struct cli_command *c, *p = NULL;
+  struct cli_command *c, *p = nullptr;
 
   if (!command) return -1;
   if (!cli->commands) return CLI_OK;
@@ -500,7 +500,7 @@ int cli_show_help(struct cli_def *cli, struct cli_command *c) {
 
   for (p = c; p; p = p->next) {
     if (p->command && p->callback && cli->privilege >= p->privilege && (p->mode == cli->mode || p->mode == MODE_ANY)) {
-      cli_error(cli, "  %-20s %s", cli_command_name(cli, p), (p->help != NULL ? p->help : ""));
+      cli_error(cli, "  %-20s %s", cli_command_name(cli, p), (p->help != nullptr ? p->help : ""));
     }
 
     if (p->children) cli_show_help(cli, p->children);
@@ -515,7 +515,7 @@ int cli_enable(struct cli_def *cli, UNUSED(const char *command), UNUSED(char *ar
   if (!cli->enable_password && !cli->enable_callback) {
     // No password required, set privilege immediately.
     cli_set_privilege(cli, PRIVILEGE_PRIVILEGED);
-    cli_set_configmode(cli, MODE_EXEC, NULL);
+    cli_set_configmode(cli, MODE_EXEC, nullptr);
   } else {
     // Require password entry
     cli->state = STATE_ENABLE_PASSWORD;
@@ -526,7 +526,7 @@ int cli_enable(struct cli_def *cli, UNUSED(const char *command), UNUSED(char *ar
 
 int cli_disable(struct cli_def *cli, UNUSED(const char *command), UNUSED(char *argv[]), UNUSED(int argc)) {
   cli_set_privilege(cli, PRIVILEGE_UNPRIVILEGED);
-  cli_set_configmode(cli, MODE_EXEC, NULL);
+  cli_set_configmode(cli, MODE_EXEC, nullptr);
   return CLI_OK;
 }
 
@@ -549,7 +549,7 @@ int cli_history(struct cli_def *cli, UNUSED(const char *command), UNUSED(char *a
 
 int cli_quit(struct cli_def *cli, UNUSED(const char *command), UNUSED(char *argv[]), UNUSED(int argc)) {
   cli_set_privilege(cli, PRIVILEGE_UNPRIVILEGED);
-  cli_set_configmode(cli, MODE_EXEC, NULL);
+  cli_set_configmode(cli, MODE_EXEC, nullptr);
   return CLI_QUIT;
 }
 
@@ -557,11 +557,11 @@ int cli_exit(struct cli_def *cli, const char *command, char *argv[], int argc) {
   if (cli->mode == MODE_EXEC) return cli_quit(cli, command, argv, argc);
 
   if (cli->mode > MODE_CONFIG)
-    cli_set_configmode(cli, MODE_CONFIG, NULL);
+    cli_set_configmode(cli, MODE_CONFIG, nullptr);
   else
-    cli_set_configmode(cli, MODE_EXEC, NULL);
+    cli_set_configmode(cli, MODE_EXEC, nullptr);
 
-  cli->service = NULL;
+  cli->service = nullptr;
   return CLI_OK;
 }
 
@@ -572,7 +572,7 @@ int cli_int_idle_timeout(struct cli_def *cli) {
 
 int cli_int_configure_terminal(struct cli_def *cli, UNUSED(const char *command), UNUSED(char *argv[]),
                                UNUSED(int argc)) {
-  cli_set_configmode(cli, MODE_CONFIG, NULL);
+  cli_set_configmode(cli, MODE_CONFIG, nullptr);
   return CLI_OK;
 }
 
@@ -606,14 +606,14 @@ struct cli_def *cli_init() {
   c = cli_register_filter(cli, "begin", cli_range_filter_init, cli_range_filter, PRIVILEGE_UNPRIVILEGED, MODE_ANY,
                           "Begin with lines that match");
   cli_register_optarg(c, "range_start", CLI_CMD_ARGUMENT | CLI_CMD_REMAINDER_OF_LINE, PRIVILEGE_UNPRIVILEGED, MODE_ANY,
-                      "Begin showing lines that match", NULL, NULL, NULL);
+                      "Begin showing lines that match", nullptr, nullptr, nullptr);
 
   c = cli_register_filter(cli, "between", cli_range_filter_init, cli_range_filter, PRIVILEGE_UNPRIVILEGED, MODE_ANY,
                           "Between lines that match");
   cli_register_optarg(c, "range_start", CLI_CMD_ARGUMENT, PRIVILEGE_UNPRIVILEGED, MODE_ANY,
-                      "Begin showing lines that match", NULL, NULL, NULL);
+                      "Begin showing lines that match", nullptr, nullptr, nullptr);
   cli_register_optarg(c, "range_end", CLI_CMD_ARGUMENT | CLI_CMD_REMAINDER_OF_LINE, PRIVILEGE_UNPRIVILEGED, MODE_ANY,
-                      "Stop showing lines that match", NULL, NULL, NULL);
+                      "Stop showing lines that match", nullptr, nullptr, nullptr);
 
   cli_register_filter(cli, "count", cli_count_filter_init, cli_count_filter, PRIVILEGE_UNPRIVILEGED, MODE_ANY,
                       "Count of lines");
@@ -621,26 +621,26 @@ struct cli_def *cli_init() {
   c = cli_register_filter(cli, "exclude", cli_match_filter_init, cli_match_filter, PRIVILEGE_UNPRIVILEGED, MODE_ANY,
                           "Exclude lines that match");
   cli_register_optarg(c, "search_pattern", CLI_CMD_ARGUMENT | CLI_CMD_REMAINDER_OF_LINE, PRIVILEGE_UNPRIVILEGED,
-                      MODE_ANY, "Search pattern", NULL, NULL, NULL);
+                      MODE_ANY, "Search pattern", nullptr, nullptr, nullptr);
 
   c = cli_register_filter(cli, "include", cli_match_filter_init, cli_match_filter, PRIVILEGE_UNPRIVILEGED, MODE_ANY,
                           "Include lines that match");
   cli_register_optarg(c, "search_pattern", CLI_CMD_ARGUMENT | CLI_CMD_REMAINDER_OF_LINE, PRIVILEGE_UNPRIVILEGED,
-                      MODE_ANY, "Search pattern", NULL, NULL, NULL);
+                      MODE_ANY, "Search pattern", nullptr, nullptr, nullptr);
 
   c = cli_register_filter(cli, "grep", cli_match_filter_init, cli_match_filter, PRIVILEGE_UNPRIVILEGED, MODE_ANY,
                           "Include lines that match regex (options: -v, -i, -e)");
   cli_register_optarg(c, "search_flags", CLI_CMD_HYPHENATED_OPTION, PRIVILEGE_UNPRIVILEGED, MODE_ANY,
-                      "Search flags (-[ivx]", NULL, cli_search_flags_validator, NULL);
+                      "Search flags (-[ivx]", nullptr, cli_search_flags_validator, nullptr);
   cli_register_optarg(c, "search_pattern", CLI_CMD_ARGUMENT | CLI_CMD_REMAINDER_OF_LINE, PRIVILEGE_UNPRIVILEGED,
-                      MODE_ANY, "Search pattern", NULL, NULL, NULL);
+                      MODE_ANY, "Search pattern", nullptr, nullptr, nullptr);
 
   c = cli_register_filter(cli, "egrep", cli_match_filter_init, cli_match_filter, PRIVILEGE_UNPRIVILEGED, MODE_ANY,
                           "Include lines that match extended regex");
   cli_register_optarg(c, "search_flags", CLI_CMD_HYPHENATED_OPTION, PRIVILEGE_UNPRIVILEGED, MODE_ANY,
-                      "Search flags (-[ivx]", NULL, cli_search_flags_validator, NULL);
+                      "Search flags (-[ivx]", nullptr, cli_search_flags_validator, nullptr);
   cli_register_optarg(c, "search_pattern", CLI_CMD_ARGUMENT | CLI_CMD_REMAINDER_OF_LINE, PRIVILEGE_UNPRIVILEGED,
-                      MODE_ANY, "Search pattern", NULL, NULL, NULL);
+                      MODE_ANY, "Search pattern", nullptr, nullptr, nullptr);
 
   cli->privilege = cli->mode = -1;
   cli_set_privilege(cli, PRIVILEGE_UNPRIVILEGED);
@@ -656,7 +656,7 @@ struct cli_def *cli_init() {
 }
 
 void cli_unregister_tree(struct cli_def *cli, struct cli_command *command, int command_type) {
-  struct cli_command *c, *p = NULL;
+  struct cli_command *c, *p = nullptr;
 
   if (!command) command = cli->commands;
 
@@ -728,10 +728,10 @@ void cli_free_history(struct cli_def *cli) {
 
 static char *cli_int_return_newword(const char *start, const char *end) {
   int len = end - start;
-  char *to = NULL;
-  char *newword = NULL;
+  char *to = nullptr;
+  char *newword = nullptr;
 
-  // allocate space (including terminal NULL, then go through and deal with escaping characters as we copy them
+  // allocate space (including terminal nullptr, then go through and deal with escaping characters as we copy them
 
   if (!(newword = static_cast<char*>(calloc(len + 1, 1)))) return 0;
   to = newword;
@@ -766,7 +766,7 @@ static int cli_parse_line(const char *line, char *words[], int max_words) {
     /*
      * a 'word' terminates at:
      *   - end-of-string, whitespace (if not inside quotes)
-     *   - start of quoted section (if word_start != NULL)
+     *   - start of quoted section (if word_start != nullptr)
      *   - end of a quoted section
      *   - whitespace/pipe unless inside quotes
      */
@@ -848,12 +848,12 @@ int cli_run_command(struct cli_def *cli, const char *command) {
 }
 
 void cli_get_completions(struct cli_def *cli, const char *command, char lastchar, struct cli_comphelp *comphelp) {
-  struct cli_command *c = NULL;
-  struct cli_command *n = NULL;
+  struct cli_command *c = nullptr;
+  struct cli_command *n = nullptr;
 
   int i;
   int command_type;
-  struct cli_pipeline *pipeline = NULL;
+  struct cli_pipeline *pipeline = nullptr;
   struct cli_pipeline_stage *stage;
   char *delim_start = DELIM_NONE;
   char *delim_end = DELIM_NONE;
@@ -874,8 +874,8 @@ void cli_get_completions(struct cli_def *cli, const char *command, char lastchar
     command_type = CLI_FILTER_COMMAND;
 
   for (c = cli->commands, i = 0; c && i < stage->num_words; c = n) {
-    char *strptr = NULL;
-    char *nameptr = NULL;
+    char *strptr = nullptr;
+    char *nameptr = nullptr;
     n = c->next;
 
     if (c->command_type != command_type) continue;
@@ -889,7 +889,7 @@ void cli_get_completions(struct cli_def *cli, const char *command, char lastchar
       for (optarg = cli->buildmode->command->optargs; optarg; optarg = optarg->next) {
         if (!strcmp(optarg->name, c->command)) break;
       }
-      if (optarg && cli_find_optarg_value(cli, optarg->name, NULL) && !(optarg->flags & (CLI_CMD_OPTION_MULTIPLE)))
+      if (optarg && cli_find_optarg_value(cli, optarg->name, nullptr) && !(optarg->flags & (CLI_CMD_OPTION_MULTIPLE)))
         continue;
     }
     if (i < stage->num_words - 1) {
@@ -963,7 +963,7 @@ static void cli_clear_line(int sockfd, char *cmd, int l, int cursor) {
   memset((char *)cmd, '\b', l);
   _write(sockfd, cmd, l);
 
-  // Null cmd buffer
+  // nullptr cmd buffer
   memset((char *)cmd, 0, l);
 }
 
@@ -1018,8 +1018,8 @@ static int show_prompt(struct cli_def *cli, int sockfd) {
 
 int cli_loop(struct cli_def *cli, int sockfd) {
   int n, l, oldl = 0, is_telnet_option = 0, skip = 0, esc = 0, cursor = 0;
-  char *cmd = NULL, *oldcmd = 0;
-  char *username = NULL, *password = NULL;
+  char *cmd = nullptr, *oldcmd = 0;
+  char *username = nullptr, *password = nullptr;
 
   cli_build_shortest(cli, cli->commands);
   cli->state = STATE_LOGIN;
@@ -1034,7 +1034,7 @@ int cli_loop(struct cli_def *cli, int sockfd) {
     _write(sockfd, negotiate, strlen(negotiate));
   }
 
-  if ((cmd = static_cast<char*>(malloc(CLI_MAX_LINE_LENGTH))) == NULL) return CLI_ERROR;
+  if ((cmd = static_cast<char*>(malloc(CLI_MAX_LINE_LENGTH))) == nullptr) return CLI_ERROR;
 
 #ifdef WIN32
   /*
@@ -1049,7 +1049,7 @@ int cli_loop(struct cli_def *cli, int sockfd) {
   }
 #endif
 
-  setbuf(cli->client, NULL);
+  setbuf(cli->client, nullptr);
   if (cli->banner) cli_error(cli, "%s", cli->banner);
 
   // Set the last action now so we don't time immediately
@@ -1057,7 +1057,7 @@ int cli_loop(struct cli_def *cli, int sockfd) {
 
   // Start off in unprivileged mode
   cli_set_privilege(cli, PRIVILEGE_UNPRIVILEGED);
-  cli_set_configmode(cli, MODE_EXEC, NULL);
+  cli_set_configmode(cli, MODE_EXEC, nullptr);
 
   // No auth required?
   if (!cli->users && !cli->auth_callback) cli->state = STATE_NORMAL;
@@ -1074,7 +1074,7 @@ int cli_loop(struct cli_def *cli, int sockfd) {
       l = cursor = oldl;
       oldcmd[l] = 0;
       cli->showprompt = 1;
-      oldcmd = NULL;
+      oldcmd = nullptr;
       oldl = 0;
     } else {
       memset(cmd, 0, CLI_MAX_LINE_LENGTH);
@@ -1086,7 +1086,6 @@ int cli_loop(struct cli_def *cli, int sockfd) {
 
     while (1) {
       int sr;
-      fd_set r;
 
       /*
        * Ensure our transient mode is reset to the starting mode on *each* loop traversal transient mode is valid only
@@ -1130,7 +1129,8 @@ int cli_loop(struct cli_def *cli, int sockfd) {
       FD_ZERO(&r);
       FD_SET(sockfd, &r);
 
-      if ((sr = select(sockfd + 1, &r, NULL, NULL, &tm)) < 0) {
+
+      if ((sr = select(sockfd + 1, &r, nullptr, nullptr, &tm)) < 0) {
         if (errno == EINTR) continue;
         perror("select");
         l = -1;
@@ -1145,7 +1145,7 @@ int cli_loop(struct cli_def *cli, int sockfd) {
         }
 
         if (cli->idle_timeout) {
-          if (time(NULL) - cli->last_action >= cli->idle_timeout) {
+          if (time(nullptr) - cli->last_action >= cli->idle_timeout) {
             if (cli->idle_timeout_callback) {
               // Call the callback and continue on if successful
               if (cli->idle_timeout_callback(cli) == CLI_OK) {
@@ -1298,7 +1298,7 @@ int cli_loop(struct cli_def *cli, int sockfd) {
                 // Move everything one char left
                 memmove(cmd + cursor - 1, cmd + cursor, l - cursor);
 
-                // Set former last char to null
+                // Set former last char to nullptr
                 cmd[l - 1] = 0;
 
                 // And reposition cursor
@@ -1371,7 +1371,7 @@ int cli_loop(struct cli_def *cli, int sockfd) {
         if (cli->mode != MODE_EXEC) {
           if (cli->buildmode) cli_int_free_buildmode(cli);
           cli_clear_line(sockfd, cmd, l, cursor);
-          cli_set_configmode(cli, MODE_EXEC, NULL);
+          cli_set_configmode(cli, MODE_EXEC, nullptr);
           l = cursor = 0;
           cli->showprompt = 1;
         }
@@ -1605,7 +1605,7 @@ int cli_loop(struct cli_def *cli, int sockfd) {
           l++;
           cursor++;
         } else {
-          // End-of-buffer, ensure null terminated
+          // End-of-buffer, ensure nullptr terminated
           cmd[cursor] = 0;
           _write(sockfd, "\a", 1);
           continue;
@@ -1619,7 +1619,7 @@ int cli_loop(struct cli_def *cli, int sockfd) {
         // Insert new character
         cmd[cursor] = c;
 
-        // IMPORTANT - if at end of buffer, set last char to NULL and don't change length, otherwise bump length by 1
+        // IMPORTANT - if at end of buffer, set last char to nullptr and don't change length, otherwise bump length by 1
         if (l == CLI_MAX_LINE_LENGTH - 1) {
           cmd[l] = 0;
         } else {
@@ -1759,7 +1759,7 @@ int cli_loop(struct cli_def *cli, int sockfd) {
 
 int cli_file(struct cli_def *cli, FILE *fh, int privilege, int mode) {
   int oldpriv = cli_set_privilege(cli, privilege);
-  int oldmode = cli_set_configmode(cli, mode, NULL);
+  int oldmode = cli_set_configmode(cli, mode, nullptr);
   char buf[CLI_MAX_LINE_LENGTH];
 
   while (1) {
@@ -1768,7 +1768,7 @@ int cli_file(struct cli_def *cli, FILE *fh, int privilege, int mode) {
     char *end;
 
     // End of file
-    if (fgets(buf, CLI_MAX_LINE_LENGTH - 1, fh) == NULL) break;
+    if (fgets(buf, CLI_MAX_LINE_LENGTH - 1, fh) == nullptr) break;
 
     if ((p = strpbrk(buf, "#\r\n"))) *p = 0;
 
@@ -1787,14 +1787,14 @@ int cli_file(struct cli_def *cli, FILE *fh, int privilege, int mode) {
   }
 
   cli_set_privilege(cli, oldpriv);
-  cli_set_configmode(cli, oldmode, NULL);
+  cli_set_configmode(cli, oldmode, nullptr);
 
   return CLI_OK;
 }
 
 static void _print(struct cli_def *cli, int print_mode, const char *format, va_list ap) {
   int n;
-  char *p = NULL;
+  char *p = nullptr;
 
   if (!cli) return;
 
@@ -1880,8 +1880,8 @@ int cli_search_flags_validator(struct cli_def *cli, const char *word, const char
 
 int cli_match_filter_init(struct cli_def *cli, int argc, char **argv, struct cli_filter *filt) {
   struct cli_match_filter_state *state;
-  char *search_pattern = cli_get_optarg_value(cli, "search_pattern", NULL);
-  char *search_flags = cli_get_optarg_value(cli, "search_flags", NULL);
+  char *search_pattern = cli_get_optarg_value(cli, "search_pattern", nullptr);
+  char *search_flags = cli_get_optarg_value(cli, "search_flags", nullptr);
 
   filt->filter = cli_match_filter;
   filt->data = state = static_cast<cli_match_filter_state*>(calloc(sizeof(struct cli_match_filter_state), 1));
@@ -1949,7 +1949,7 @@ int cli_match_filter(UNUSED(struct cli_def *cli), const char *string, void *data
   }
 
   if (state->flags & MATCH_REGEX) {
-    if (!regexec(&state->match.re, string, 0, NULL, 0)) r = CLI_OK;
+    if (!regexec(&state->match.re, string, 0, nullptr, 0)) r = CLI_OK;
   } else {
     if (strstr(string, state->match.string)) r = CLI_OK;
   }
@@ -1972,8 +1972,8 @@ struct cli_range_filter_state {
 
 int cli_range_filter_init(struct cli_def *cli, int argc, char **argv, struct cli_filter *filt) {
   struct cli_range_filter_state *state;
-  char *from = strdup(cli_get_optarg_value(cli, "range_start", NULL));
-  char *to = strdup(cli_get_optarg_value(cli, "range_end", NULL));
+  char *from = strdup(cli_get_optarg_value(cli, "range_start", nullptr));
+  char *to = strdup(cli_get_optarg_value(cli, "range_end", nullptr));
 
   // Do not have to check from/to since we would not have gotten here if we were missing a required argument.
   filt->filter = cli_range_filter;
@@ -2074,16 +2074,16 @@ struct cli_command *cli_register_filter(struct cli_def *cli, const char *command
                                         const char *help) {
   struct cli_command *c;
 
-  if (!command) return NULL;
-  if (!(c = static_cast<cli_command*>(calloc(sizeof(struct cli_command), 1)))) return NULL;
+  if (!command) return nullptr;
+  if (!(c = static_cast<cli_command*>(calloc(sizeof(struct cli_command), 1)))) return nullptr;
 
   c->command_type = CLI_FILTER_COMMAND;
   c->init = init;
   c->filter = filter;
-  c->next = NULL;
+  c->next = nullptr;
   if (!(c->command = strdup(command))) {
     free(c);
-    return NULL;
+    return nullptr;
   }
 
   c->privilege = privilege;
@@ -2091,11 +2091,11 @@ struct cli_command *cli_register_filter(struct cli_def *cli, const char *command
   if (help && !(c->help = strdup(help))) {
     free(c->command);
     free(c);
-    return NULL;
+    return nullptr;
   }
 
   // Filters are all registered at the top level.
-  cli_register_command_core(cli, NULL, c);
+  cli_register_command_core(cli, nullptr, c);
   return c;
 }
 
@@ -2118,14 +2118,14 @@ void cli_int_free_found_optargs(struct cli_optarg_pair **optarg_pair) {
 }
 
 char *cli_find_optarg_value(struct cli_def *cli, char *name, char *find_after) {
-  char *value = NULL;
+  char *value = nullptr;
   struct cli_optarg_pair *optarg_pair;
-  if (!name || !cli->found_optargs) return NULL;
+  if (!name || !cli->found_optargs) return nullptr;
 
   for (optarg_pair = cli->found_optargs; optarg_pair && !value; optarg_pair = optarg_pair->next) {
     if (strcmp(optarg_pair->name, name) == 0) {
       if (find_after && find_after == optarg_pair->value) {
-        find_after = NULL;
+        find_after = nullptr;
         continue;
       }
       value = optarg_pair->value;
@@ -2177,13 +2177,13 @@ struct cli_optarg *cli_register_optarg(struct cli_command *cmd, const char *name
                                                               struct cli_comphelp *),
                                        int (*validator)(struct cli_def *cli, const char *, const char *),
                                        int (*transient_mode)(struct cli_def *cli, const char *, const char *)) {
-  struct cli_optarg *optarg = NULL;
-  struct cli_optarg *lastopt = NULL;
-  struct cli_optarg *ptr = NULL;
+  struct cli_optarg *optarg = nullptr;
+  struct cli_optarg *lastopt = nullptr;
+  struct cli_optarg *ptr = nullptr;
   int retval = CLI_ERROR;
 
   // Name must not already exist with this priv/mode
-  for (ptr = cmd->optargs, lastopt = NULL; ptr; lastopt = ptr, ptr = ptr->next) {
+  for (ptr = cmd->optargs, lastopt = nullptr; ptr; lastopt = ptr, ptr = ptr->next) {
     if (!strcmp(name, ptr->name) && ptr->mode == mode && ptr->privilege == privilege) {
       goto CLEANUP;
     }
@@ -2209,7 +2209,7 @@ struct cli_optarg *cli_register_optarg(struct cli_command *cmd, const char *name
 CLEANUP:
   if (retval != CLI_OK) {
     cli_free_optarg(optarg);
-    optarg = NULL;
+    optarg = nullptr;
   }
   return optarg;
 }
@@ -2219,7 +2219,7 @@ int cli_unregister_optarg(struct cli_command *cmd, const char *name) {
   struct cli_optarg *lastptr;
   int retval = CLI_ERROR;
   // Iterate looking for this option name, stopping at end or if name matches
-  for (lastptr = NULL, ptr = cmd->optargs; ptr && strcmp(ptr->name, name); lastptr = ptr, ptr = ptr->next)
+  for (lastptr = nullptr, ptr = cmd->optargs; ptr && strcmp(ptr->name, name); lastptr = ptr, ptr = ptr->next)
     ;
 
   // If ptr, then we found the optarg to delete
@@ -2227,11 +2227,11 @@ int cli_unregister_optarg(struct cli_command *cmd, const char *name) {
     if (lastptr) {
       // Not first optarg
       lastptr->next = ptr->next;
-      ptr->next = NULL;
+      ptr->next = nullptr;
     } else {
       // First optarg
       cmd->optargs = ptr->next;
-      ptr->next = NULL;
+      ptr->next = nullptr;
     }
     cli_free_optarg(ptr);
     cli_optarg_build_shortest(cmd->optargs);
@@ -2283,7 +2283,7 @@ int cli_set_optarg_value(struct cli_def *cli, const char *name, const char *valu
   }
   // Set the value
   if (optarg_pair) {
-    // Name is null only if we didn't find it
+    // Name is nullptr only if we didn't find it
     if (!optarg_pair->name) optarg_pair->name = strdup(name);
 
     // Value may be overwritten, so free any old value.
@@ -2297,11 +2297,11 @@ int cli_set_optarg_value(struct cli_def *cli, const char *name, const char *valu
 
 struct cli_optarg_pair *cli_get_all_found_optargs(struct cli_def *cli) {
   if (cli) return cli->found_optargs;
-  return NULL;
+  return nullptr;
 }
 
 char *cli_get_optarg_value(struct cli_def *cli, const char *name, char *find_after) {
-  char *value = NULL;
+  char *value = nullptr;
   struct cli_optarg_pair *optarg_pair;
 
   for (optarg_pair = cli->found_optargs; !value && optarg_pair; optarg_pair = optarg_pair->next) {
@@ -2310,7 +2310,7 @@ char *cli_get_optarg_value(struct cli_def *cli, const char *name, char *find_aft
 
     // Did we have a find_after, then ignore anything up until our find_after match
     if (find_after && optarg_pair->value == find_after) {
-      find_after = NULL;
+      find_after = nullptr;
       continue;
     } else if (!find_after) {
       value = optarg_pair->value;
@@ -2333,7 +2333,7 @@ int cli_int_enter_buildmode(struct cli_def *cli, struct cli_pipeline_stage *stag
   struct cli_optarg *optarg;
   struct cli_command *c;
   struct cli_buildmode *buildmode;
-  struct cli_optarg *buildmodeOptarg = NULL;
+  struct cli_optarg *buildmodeOptarg = nullptr;
   int rc = CLI_BUILDMODE_START;
 
   if (!cli || !(buildmode = (struct cli_buildmode *)calloc(1, sizeof(struct cli_buildmode)))) {
@@ -2376,24 +2376,24 @@ int cli_int_enter_buildmode(struct cli_def *cli, struct cli_pipeline_stage *stag
     if (optarg->mode != cli->mode && optarg->mode != cli->transient_mode)
       continue;
     else if (optarg->flags & (CLI_CMD_OPTIONAL_ARGUMENT | CLI_CMD_ARGUMENT)) {
-      if ((c = cli_int_register_buildmode_command(cli, NULL, optarg->name, cli_int_buildmode_cmd_cback, optarg->flags,
+      if ((c = cli_int_register_buildmode_command(cli, nullptr, optarg->name, cli_int_buildmode_cmd_cback, optarg->flags,
                                                   optarg->privilege, cli->mode, optarg->help))) {
         cli_register_optarg(c, optarg->name, CLI_CMD_ARGUMENT | (optarg->flags & CLI_CMD_OPTION_MULTIPLE),
                             optarg->privilege, cli->mode, optarg->help, optarg->get_completions, optarg->validator,
-                            NULL);
+                            nullptr);
       } else {
         rc = CLI_BUILDMODE_ERROR;
         goto out;
       }
     } else {
       if (optarg->flags & CLI_CMD_OPTION_MULTIPLE) {
-        if (!cli_int_register_buildmode_command(cli, NULL, optarg->name, cli_int_buildmode_flag_multiple_cback,
+        if (!cli_int_register_buildmode_command(cli, nullptr, optarg->name, cli_int_buildmode_flag_multiple_cback,
                                                 optarg->flags, optarg->privilege, cli->mode, optarg->help)) {
           rc = CLI_BUILDMODE_ERROR;
           goto out;
         }
       } else {
-        if (!cli_int_register_buildmode_command(cli, NULL, optarg->name, cli_int_buildmode_flag_cback, optarg->flags,
+        if (!cli_int_register_buildmode_command(cli, nullptr, optarg->name, cli_int_buildmode_flag_cback, optarg->flags,
                                                 optarg->privilege, cli->mode, optarg->help)) {
           rc = CLI_BUILDMODE_ERROR;
           goto out;
@@ -2404,16 +2404,16 @@ int cli_int_enter_buildmode(struct cli_def *cli, struct cli_pipeline_stage *stag
   cli->buildmode->cname = strdup(cli_command_name(cli, stage->command));
   // Now add the four 'always there' commands to cancel current mode and to execute the command, show settings, and
   // unset
-  cli_int_register_buildmode_command(cli, NULL, "cancel", cli_int_buildmode_cancel_cback, 0, PRIVILEGE_UNPRIVILEGED,
+  cli_int_register_buildmode_command(cli, nullptr, "cancel", cli_int_buildmode_cancel_cback, 0, PRIVILEGE_UNPRIVILEGED,
                                      cli->mode, "Cancel command");
-  cli_int_register_buildmode_command(cli, NULL, "execute", cli_int_buildmode_execute_cback, 0, PRIVILEGE_UNPRIVILEGED,
+  cli_int_register_buildmode_command(cli, nullptr, "execute", cli_int_buildmode_execute_cback, 0, PRIVILEGE_UNPRIVILEGED,
                                      cli->mode, "Execute command");
-  cli_int_register_buildmode_command(cli, NULL, "show", cli_int_buildmode_show_cback, 0, PRIVILEGE_UNPRIVILEGED,
+  cli_int_register_buildmode_command(cli, nullptr, "show", cli_int_buildmode_show_cback, 0, PRIVILEGE_UNPRIVILEGED,
                                      cli->mode, "Show current settings");
-  c = cli_int_register_buildmode_command(cli, NULL, "unset", cli_int_buildmode_unset_cback, 0, PRIVILEGE_UNPRIVILEGED,
+  c = cli_int_register_buildmode_command(cli, nullptr, "unset", cli_int_buildmode_unset_cback, 0, PRIVILEGE_UNPRIVILEGED,
                                          cli->mode, "Unset a setting");
   cli_register_optarg(c, "setting", CLI_CMD_ARGUMENT | CLI_CMD_DO_NOT_RECORD, PRIVILEGE_UNPRIVILEGED, cli->mode,
-                      "setting to clear", cli_int_buildmode_unset_completor, cli_int_buildmode_unset_validator, NULL);
+                      "setting to clear", cli_int_buildmode_unset_completor, cli_int_buildmode_unset_validator, nullptr);
 
 out:
   // And lastly set the initial help menu for the unset command
@@ -2432,15 +2432,15 @@ struct cli_command *cli_int_register_buildmode_command(struct cli_def *cli, stru
                                                        int flags, int privilege, int mode, const char *help) {
   struct cli_command *c;
 
-  if (!command) return NULL;
-  if (!(c = static_cast<cli_command*>(calloc(sizeof(struct cli_command), 1)))) return NULL;
+  if (!command) return nullptr;
+  if (!(c = static_cast<cli_command*>(calloc(sizeof(struct cli_command), 1)))) return nullptr;
 
   c->flags = flags;
   c->callback = callback;
-  c->next = NULL;
+  c->next = nullptr;
   if (!(c->command = strdup(command))) {
     free(c);
-    return NULL;
+    return nullptr;
   }
 
   c->command_type = CLI_BUILDMODE_COMMAND;
@@ -2449,23 +2449,23 @@ struct cli_command *cli_int_register_buildmode_command(struct cli_def *cli, stru
   if (help && !(c->help = strndup(help, strchrnul(help, '\v') - help))) {
     free(c->command);
     free(c);
-    return NULL;
+    return nullptr;
   }
 
   // Buildmode commmands are all registered at the top level
-  cli_register_command_core(cli, NULL, c);
+  cli_register_command_core(cli, nullptr, c);
   return c;
 }
 
 int cli_int_execute_buildmode(struct cli_def *cli) {
-  struct cli_optarg *optarg = NULL;
+  struct cli_optarg *optarg = nullptr;
   int rc = CLI_OK;
   char *cmdline;
-  char *value = NULL;
+  char *value = nullptr;
 
   cmdline = strdup(cli_command_name(cli, cli->buildmode->command));
   for (optarg = cli->buildmode->command->optargs; rc == CLI_OK && optarg; optarg = optarg->next) {
-    value = NULL;
+    value = nullptr;
     do {
       if (cli->privilege < optarg->privilege) continue;
       if ((optarg->mode != cli->buildmode->mode) && (optarg->mode != cli->buildmode->transient_mode) &&
@@ -2509,8 +2509,8 @@ int cli_int_execute_buildmode(struct cli_def *cli) {
 }
 
 char *cli_int_buildmode_extend_cmdline(char *cmdline, char *word) {
-  char *tptr = NULL;
-  char *cptr = NULL;
+  char *tptr = nullptr;
+  char *cptr = nullptr;
   size_t oldlen = strlen(cmdline);
   size_t wordlen = strlen(word);
   char quoteChar[2] = "";
@@ -2540,7 +2540,7 @@ char *cli_int_buildmode_extend_cmdline(char *cmdline, char *word) {
   }
 
   // Allocate enough space to hold the old string, a space, possible quote, the new string,
-  // another possible quote, and the final null terminator).
+  // another possible quote, and the final nullptr terminator).
 
   if ((tptr = (char *)realloc(cmdline, oldlen + 1 + 1 + wordlen + 1 + 1))) {
     strcat(tptr, " ");
@@ -2769,7 +2769,7 @@ void cli_free_comphelp(struct cli_comphelp *comphelp) {
 
 static int cli_int_locate_command(struct cli_def *cli, struct cli_command *commands, int command_type, int start_word,
                                   struct cli_pipeline_stage *stage) {
-  struct cli_command *c, *again_config = NULL, *again_any = NULL;
+  struct cli_command *c, *again_config = nullptr, *again_any = nullptr;
   int c_words = stage->num_words;
 
   for (c = commands; c; c = c->next) {
@@ -2780,7 +2780,7 @@ static int cli_int_locate_command(struct cli_def *cli, struct cli_command *comma
     if (strncasecmp(c->command, stage->words[start_word], strlen(stage->words[start_word]))) continue;
 
   AGAIN:
-    if (c->mode == cli->mode || (c->mode == MODE_ANY && again_any != NULL)) {
+    if (c->mode == cli->mode || (c->mode == MODE_ANY && again_any != nullptr)) {
       int rc = CLI_OK;
 
       // Found a word!
@@ -2820,7 +2820,7 @@ static int cli_int_locate_command(struct cli_def *cli, struct cli_command *comma
         stage->command = c;
         stage->first_unmatched = start_word + 1;
         stage->first_optarg = stage->first_unmatched;
-        cli_int_parse_optargs(cli, stage, c, '\0', NULL);
+        cli_int_parse_optargs(cli, stage, c, '\0', nullptr);
         rc = stage->status;
       }
       return rc;
@@ -2857,7 +2857,7 @@ int cli_int_validate_pipeline(struct cli_def *cli, struct cli_pipeline *pipeline
   if (!pipeline) return CLI_ERROR;
   cli->pipeline = pipeline;
 
-  cli->found_optargs = NULL;
+  cli->found_optargs = nullptr;
 
   // If the line is totally empty this is not an error, but we need to return
   // CLI_ERROR to avoid processing it
@@ -2882,7 +2882,7 @@ int cli_int_validate_pipeline(struct cli_def *cli, struct cli_pipeline *pipeline
     if (cli->buildmode)
       cli->found_optargs = cli->buildmode->found_optargs;
     else
-      cli->found_optargs = NULL;
+      cli->found_optargs = nullptr;
     rc = cli_int_locate_command(cli, cli->commands, command_type, 0, &pipeline->stage[i]);
 
     // And save our found optargs for later use
@@ -2893,7 +2893,7 @@ int cli_int_validate_pipeline(struct cli_def *cli, struct cli_pipeline *pipeline
 
     if (rc != CLI_OK) break;
   }
-  cli->pipeline = NULL;
+  cli->pipeline = nullptr;
 
   return rc;
 }
@@ -2905,7 +2905,7 @@ void cli_int_free_pipeline(struct cli_pipeline *pipeline) {
   for (i = 0; i < pipeline->num_words; i++) free_z(pipeline->words[i]);
   free_z(pipeline->cmdline);
   free_z(pipeline);
-  pipeline = NULL;
+  pipeline = nullptr;
 }
 
 void cli_int_show_pipeline(struct cli_def *cli, struct cli_pipeline *pipeline) {
@@ -2941,14 +2941,14 @@ struct cli_pipeline *cli_int_generate_pipeline(struct cli_def *cli, const char *
   int i;
   struct cli_pipeline_stage *stage;
   char **word;
-  struct cli_pipeline *pipeline = NULL;
+  struct cli_pipeline *pipeline = nullptr;
 
-  cli->found_optargs = NULL;
+  cli->found_optargs = nullptr;
   if (cli->buildmode) cli->found_optargs = cli->buildmode->found_optargs;
-  if (!command) return NULL;
+  if (!command) return nullptr;
   while (*command && isspace(*command)) command++;
 
-  if (!(pipeline = (struct cli_pipeline *)calloc(1, sizeof(struct cli_pipeline)))) return NULL;
+  if (!(pipeline = (struct cli_pipeline *)calloc(1, sizeof(struct cli_pipeline)))) return nullptr;
   pipeline->cmdline = (char *)strdup(command);
 
   pipeline->num_words = cli_parse_line(command, pipeline->words, CLI_MAX_LINE_WORDS);
@@ -2963,13 +2963,13 @@ struct cli_pipeline *cli_int_generate_pipeline(struct cli_def *cli, const char *
         // Can't allow filters in buildmode commands
         cli_int_free_pipeline(pipeline);
         cli_error(cli, "\nPipelines are not allowed in buildmode");
-        return NULL;
+        return nullptr;
       }
       stage->stage_num = pipeline->num_stages;
       stage++;
       stage->num_words = 0;
       pipeline->num_stages++;
-      stage->words = word + 1;  // First word of the next stage is one past where we are (possibly NULL)
+      stage->words = word + 1;  // First word of the next stage is one past where we are (possibly nullptr)
     } else {
       stage->num_words++;
     }
@@ -2999,7 +2999,7 @@ int cli_int_execute_pipeline(struct cli_def *cli, struct cli_pipeline *pipeline)
       filt = &(*filt)->next;
     }
   }
-  pipeline->current_stage = NULL;
+  pipeline->current_stage = nullptr;
 
   // Did everything init?  If so, execute, otherwise skip execution
   if ((rc == CLI_OK) && pipeline->stage[0].command->callback) {
@@ -3014,18 +3014,18 @@ int cli_int_execute_pipeline(struct cli_def *cli, struct cli_pipeline *pipeline)
                                   stage->num_words - stage->first_unmatched);
     if (pipeline->current_stage->command->command_type == CLI_BUILDMODE_COMMAND)
       cli->buildmode->found_optargs = cli->found_optargs;
-    pipeline->current_stage = NULL;
+    pipeline->current_stage = nullptr;
   }
 
   // Now teardown any filters
   while (cli->filters) {
     struct cli_filter *filt = cli->filters;
-    if (filt->filter) filt->filter(cli, NULL, cli->filters->data);
+    if (filt->filter) filt->filter(cli, nullptr, cli->filters->data);
     cli->filters = filt->next;
     free_z(filt);
   }
-  cli->found_optargs = NULL;
-  cli->pipeline = NULL;
+  cli->found_optargs = nullptr;
+  cli->pipeline = nullptr;
   return rc;
 }
 
@@ -3086,18 +3086,18 @@ static void cli_get_optarg_comphelp(struct cli_def *cli, struct cli_optarg *opta
   int help_insert = 0;
   char *delim_start = DELIM_NONE;
   char *delim_end = DELIM_NONE;
-  int (*get_completions)(struct cli_def *, const char *, const char *, struct cli_comphelp *) = NULL;
-  char *tptr = NULL;
+  int (*get_completions)(struct cli_def *, const char *, const char *, struct cli_comphelp *) = nullptr;
+  char *tptr = nullptr;
 
   // If we've already seen a value by this exact name, skip it, unless the multiple flag is set
-  if (cli_find_optarg_value(cli, optarg->name, NULL) && !(optarg->flags & (CLI_CMD_OPTION_MULTIPLE))) return;
+  if (cli_find_optarg_value(cli, optarg->name, nullptr) && !(optarg->flags & (CLI_CMD_OPTION_MULTIPLE))) return;
 
   get_completions = optarg->get_completions;
   if (optarg->flags & CLI_CMD_OPTIONAL_FLAG) {
     if (!(anchor_word && !strncmp(anchor_word, optarg->name, strlen(anchor_word)))) {
       delim_start = DELIM_OPT_START;
       delim_end = DELIM_OPT_END;
-      get_completions = NULL;  // No point, completor of field is the name itself
+      get_completions = nullptr;  // No point, completor of field is the name itself
     }
   } else if (optarg->flags & CLI_CMD_HYPHENATED_OPTION) {
     delim_start = DELIM_OPT_START;
@@ -3122,7 +3122,7 @@ static void cli_get_optarg_comphelp(struct cli_def *cli, struct cli_optarg *opta
     } else {
       // Matching against optional argument 'name'
       help_insert = 1;
-      get_completions = NULL;  // Matching against the name, not the following field value
+      get_completions = nullptr;  // Matching against the name, not the following field value
       if (!(anchor_word && !strncmp(anchor_word, optarg->name, strlen(anchor_word)))) {
         delim_start = DELIM_OPT_START;
         delim_end = DELIM_OPT_END;
@@ -3146,13 +3146,13 @@ static void cli_get_optarg_comphelp(struct cli_def *cli, struct cli_optarg *opta
      *  wrap on nearest preceeding whitespace when it hits a boundary.  Subsequent lines will be indented
      *  by an additional 2 spaces, and will drop the asterisk.
      */
-    char *working = NULL;
-    char *nameptr = NULL;
-    char *helpptr = NULL;
-    char *lineptr = NULL;
-    char *savelineptr = NULL;
-    char *savetabptr = NULL;
-    char *tname = NULL;
+    char *working = nullptr;
+    char *nameptr = nullptr;
+    char *helpptr = nullptr;
+    char *lineptr = nullptr;
+    char *savelineptr = nullptr;
+    char *savetabptr = nullptr;
+    char *tname = nullptr;
     int indent = 2;
     int helplen;
     char emptystring[] = "";
@@ -3175,7 +3175,7 @@ static void cli_get_optarg_comphelp(struct cli_def *cli, struct cli_optarg *opta
 
     if (helplen < 0) {
       helpptr = emptystring;
-      working = NULL;
+      working = nullptr;
     }
 
     // break things up into tab separated entities - always show the first entry
@@ -3195,10 +3195,10 @@ static void cli_get_optarg_comphelp(struct cli_def *cli, struct cli_optarg *opta
 
       // we may not need to show all off the 'extra help', so loop here
       do {
-        lineptr = strtok_r(NULL, "\v", &savelineptr);
+        lineptr = strtok_r(nullptr, "\v", &savelineptr);
         if (lineptr) {
           nameptr = strtok_r(lineptr, "\t", &savetabptr);
-          helpptr = strtok_r(NULL, "\t", &savetabptr);
+          helpptr = strtok_r(nullptr, "\t", &savetabptr);
         }
       } while (lineptr && nameptr && helpptr && (next_word && (strncmp(next_word, nameptr, strlen(next_word)))));
     } while (lineptr && nameptr && helpptr);
@@ -3216,7 +3216,7 @@ static void cli_get_optarg_comphelp(struct cli_def *cli, struct cli_optarg *opta
 
 static void cli_int_parse_optargs(struct cli_def *cli, struct cli_pipeline_stage *stage, struct cli_command *cmd,
                                   char lastchar, struct cli_comphelp *comphelp) {
-  struct cli_optarg *optarg = NULL, *oaptr = NULL;
+  struct cli_optarg *optarg = nullptr, *oaptr = nullptr;
   int word_idx, word_incr, candidate_idx;
   struct cli_optarg *candidates[CLI_MAX_LINE_WORDS];
   char *value;
@@ -3231,9 +3231,9 @@ static void cli_int_parse_optargs(struct cli_def *cli, struct cli_pipeline_stage
   /*
    * Tab completion and help are *only* allowed at end of string, but we need to process the entire command to know what
    * has already been found.  There should be no ambiguities before the 'last' word.
-   * Note specifically that for tab completions and help the *last* word can be a null pointer.
+   * Note specifically that for tab completions and help the *last* word can be a nullptr pointer.
    */
-  stage->error_word = NULL;
+  stage->error_word = nullptr;
 
   /* Start our optarg and word pointers at the beginning.
    * optarg will be incremented *only* when an argument is identified.
@@ -3273,7 +3273,7 @@ static void cli_int_parse_optargs(struct cli_def *cli, struct cli_pipeline_stage
        * required.
        */
       if (oaptr->flags & CLI_CMD_SPOT_CHECK && num_candidates == 0) {
-        stage->status = (*oaptr->validator)(cli, NULL, NULL);
+        stage->status = (*oaptr->validator)(cli, nullptr, nullptr);
         if (stage->status != CLI_OK) {
           stage->error_word = stage->words[word_idx];
           cli_reprompt(cli);
@@ -3385,7 +3385,7 @@ static void cli_int_parse_optargs(struct cli_def *cli, struct cli_pipeline_stage
         int set_value_return = 0;
 
         if (oaptr->flags & CLI_CMD_REMAINDER_OF_LINE) {
-          char *combined = NULL;
+          char *combined = nullptr;
           combined = join_words(stage->num_words - word_idx, stage->words + word_idx);
           set_value_return = cli_set_optarg_value(cli, oaptr->name, combined, 0);
           free_z(combined);
