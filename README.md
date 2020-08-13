@@ -1,3 +1,21 @@
+
+### This is maybe not the right version of libcli you are looking for 
+
+This version of libcli is forked from [dparrish/libcli](https://github.com/dparrish/libcli) for specific use in [smithproxy](https://github.com/astibal/smithproxy) project.  
+
+**It's not intended for general use, which is discouraged.** 
+
+
+One of main motivation was generic use of select() socket API call, which is not simply enough for my needs.
+Waiting for my changes present in all streamline versions of libcli in all possible distros is not practical and really a long run,
+considering how stale the development of the original lib is.
+
+Also, having libcli forked already, it will divert in future more towards single-use header and to C++ (lot of API changes).
+These expected changes are however not a priority and won't be seen implemented any soon.  
+
+ 
+### Original version of README
+
 Libcli provides a shared C library for including a Cisco-like command-line
 interface into other software.
 
