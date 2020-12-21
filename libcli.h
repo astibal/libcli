@@ -251,6 +251,7 @@ void cli_unregister_all_optarg(struct cli_command *c);
 void cli_unregister_all_filters(struct cli_def *cli);
 void cli_unregister_all_commands(struct cli_def *cli);
 void cli_unregister_all(struct cli_def *cli, struct cli_command *command);
+void cli_unregister_single(struct cli_def *cli, struct cli_command *command);
 
 /*
  * Expose some previous internal routines.  Just in case someone was using those
