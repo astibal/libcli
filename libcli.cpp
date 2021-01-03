@@ -666,19 +666,26 @@ struct cli_def *cli_init() {
 }
 
 void cli_unregister_single(struct cli_def *cli, struct cli_command *command) {
-    struct cli_command *c, *p = nullptr;
 
-    if (!command) command = cli->commands;
+    if(command) {
+        cli_command* my_next = command->next;
+        cli_command* my_prev = command->previous;
 
-    c = command;
-    if(c) {
-        p = c->next;
-        if(c->command_type == CLI_ANY_COMMAND || c->command_type == CLI_REGULAR_COMMAND) {
-            if (c == cli->commands) cli->commands = c->next;
+        if(command->command_type == CLI_ANY_COMMAND or command->command_type == CLI_REGULAR_COMMAND) {
+
+            if (command == cli->commands) {
+                cli->commands = command->next;
+            }
+
+            if(my_next)
+                my_next->previous = my_prev;
+
+            if(my_prev)
+                my_prev->next = my_next;
+
             // Unregister all child commands
-            cli_free_command(cli, c);
+            cli_free_command(cli, command);
         }
-        c = p;
     }
 }
 
