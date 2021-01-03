@@ -474,6 +474,12 @@ static void cli_free_command(struct cli_def *cli, struct cli_command *cmd) {
       cmd->next->previous = cmd->previous;
     }
   }
+
+  if(cmd->parent and cmd->parent->children == cmd) {
+       // if parent children root points to us
+       cmd->parent->children = cmd->next;
+  }
+
   free(cmd);
 }
 
