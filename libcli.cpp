@@ -103,6 +103,8 @@ int regex_dummy() {
 #define REG_ICASE 0
 #endif
 
+namespace libcli {
+
 enum cli_states {
   STATE_LOGIN,
   STATE_PASSWORD,
@@ -174,11 +176,14 @@ static void cli_int_free_pipeline(struct cli_pipeline *pipeline);
 static void cli_register_command_core(struct cli_def *cli, struct cli_command *parent, struct cli_command *c);
 static void cli_int_wrap_help_line(char *nameptr, char *helpptr, struct cli_comphelp *comphelp);
 
-static char DELIM_OPT_START[] = "[";
-static char DELIM_OPT_END[] = "]";
-static char DELIM_ARG_START[] = "<";
-static char DELIM_ARG_END[] = ">";
-static char DELIM_NONE[] = "";
+
+struct Delim {
+    static inline char OPT_START[] = "[";
+    static inline char OPT_END[] = "]";
+    static inline char ARG_START[] = "<";
+    static inline char ARG_END[] = ">";
+    static inline char NONE[] = "";
+};
 
 static ssize_t _write(int fd, const void *buf, size_t count) {
   size_t written = 0;
@@ -891,8 +896,8 @@ void cli_get_completions(struct cli_def *cli, const char *command, char lastchar
   int command_type;
   struct cli_pipeline *pipeline = nullptr;
   struct cli_pipeline_stage *stage;
-  char *delim_start = DELIM_NONE;
-  char *delim_end = DELIM_NONE;
+  char *delim_start = Delim::NONE;
+  char *delim_end = Delim::NONE;
 
   if (!(pipeline = cli_int_generate_pipeline(cli, command))) goto out;
 
@@ -941,15 +946,15 @@ void cli_get_completions(struct cli_def *cli, const char *command, char lastchar
     }
 
     if (lastchar == '?') {
-      delim_start = DELIM_NONE;
-      delim_end = DELIM_NONE;
+      delim_start = Delim::NONE;
+      delim_end = Delim::NONE;
 
       // Note that buildmode commands need to see if that command is some optinal value
 
       if (command_type == CLI_BUILDMODE_COMMAND) {
         if (c->flags & (CLI_CMD_OPTIONAL_FLAG | CLI_CMD_OPTIONAL_ARGUMENT)) {
-          delim_start = DELIM_OPT_START;
-          delim_end = DELIM_OPT_END;
+          delim_start = Delim::OPT_START;
+          delim_end = Delim::OPT_END;
         }
       }
       if (asprintf(&nameptr, "%s%s%s", delim_start, c->command, delim_end) != -1) {
@@ -3150,8 +3155,8 @@ static void cli_get_optarg_comphelp(struct cli_def *cli, struct cli_optarg *opta
                                     int num_candidates, const char lastchar, const char *anchor_word,
                                     const char *next_word) {
   int help_insert = 0;
-  char *delim_start = DELIM_NONE;
-  char *delim_end = DELIM_NONE;
+  char *delim_start = Delim::NONE;
+  char *delim_end = Delim::NONE;
   int (*get_completions)(struct cli_def *, const char *, const char *, struct cli_comphelp *) = nullptr;
   char *tptr = nullptr;
 
@@ -3161,16 +3166,16 @@ static void cli_get_optarg_comphelp(struct cli_def *cli, struct cli_optarg *opta
   get_completions = optarg->get_completions;
   if (optarg->flags & CLI_CMD_OPTIONAL_FLAG) {
     if (!(anchor_word && !strncmp(anchor_word, optarg->name, strlen(anchor_word)))) {
-      delim_start = DELIM_OPT_START;
-      delim_end = DELIM_OPT_END;
+      delim_start = Delim::OPT_START;
+      delim_end = Delim::OPT_END;
       get_completions = nullptr;  // No point, completor of field is the name itself
     }
   } else if (optarg->flags & CLI_CMD_HYPHENATED_OPTION) {
-    delim_start = DELIM_OPT_START;
-    delim_end = DELIM_OPT_END;
+    delim_start = Delim::OPT_START;
+    delim_end = Delim::OPT_END;
   } else if (optarg->flags & CLI_CMD_ARGUMENT) {
-    delim_start = DELIM_ARG_START;
-    delim_end = DELIM_ARG_END;
+    delim_start = Delim::ARG_START;
+    delim_end = Delim::ARG_END;
   } else if (optarg->flags & CLI_CMD_OPTIONAL_ARGUMENT) {
     /*
      * Optional args can match against the name or the value.
@@ -3182,16 +3187,16 @@ static void cli_get_optarg_comphelp(struct cli_def *cli, struct cli_optarg *opta
       // Matching against optional argument 'value'
       help_insert = 0;
       if (!get_completions) {
-        delim_start = DELIM_ARG_START;
-        delim_end = DELIM_ARG_END;
+        delim_start = Delim::ARG_START;
+        delim_end = Delim::ARG_END;
       }
     } else {
       // Matching against optional argument 'name'
       help_insert = 1;
       get_completions = nullptr;  // Matching against the name, not the following field value
       if (!(anchor_word && !strncmp(anchor_word, optarg->name, strlen(anchor_word)))) {
-        delim_start = DELIM_OPT_START;
-        delim_end = DELIM_OPT_END;
+        delim_start = Delim::OPT_START;
+        delim_end = Delim::OPT_END;
       }
     }
   }
@@ -3253,8 +3258,8 @@ static void cli_get_optarg_comphelp(struct cli_def *cli, struct cli_optarg *opta
       cli_int_wrap_help_line(leftcolumn, helpptr, comphelp);
 
       // clear out any delimiter settings and set indent for any subtext
-      delim_start = DELIM_NONE;
-      delim_end = DELIM_NONE;
+      delim_start = Delim::NONE;
+      delim_end = Delim::NONE;
       indent = 4;
       free_z(tname);
       free_z(leftcolumn);
@@ -3572,4 +3577,6 @@ void cli_dump_optargs_and_args(struct cli_def *cli, const char *text, char *argv
     cli_print(cli, "%2d  %s=%s", i, optargs->name, optargs->value);
   cli_print(cli, "Extra args");
   for (i = 0; i < argc; i++) cli_print(cli, "%2d %s", i, argv[i]);
+}
+
 }
