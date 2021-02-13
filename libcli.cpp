@@ -2488,8 +2488,10 @@ int cli_int_enter_buildmode(struct cli_def *cli, struct cli_pipeline_stage *stag
 
 out:
   // And lastly set the initial help menu for the unset command
-  cli_int_buildmode_reset_unset_help(cli);
-  if (rc != CLI_BUILDMODE_START) cli_int_free_buildmode(cli);
+  if(cli) {
+      cli_int_buildmode_reset_unset_help(cli);
+      if (rc != CLI_BUILDMODE_START) cli_int_free_buildmode(cli);
+  }
   return rc;
 }
 
