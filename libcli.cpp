@@ -1105,7 +1105,7 @@ int cli_loop(struct cli_def *cli, int sockfd) {
 
     #ifdef USE_EPOLL
     int epoll_fd = epoll_create(1);
-    epoll_event edata{0};
+    epoll_event edata{};
     edata.events = EPOLLIN;
     edata.data.fd = sockfd;
 
@@ -1446,7 +1446,7 @@ int cli_loop(struct cli_def *cli, int sockfd) {
 
       // TAB completion
       if (c == CTRL('I')) {
-        struct cli_comphelp comphelp = {0};
+        struct cli_comphelp comphelp = {};
 
         if (cli->state == STATE_LOGIN || cli->state == STATE_PASSWORD || cli->state == STATE_ENABLE_PASSWORD) continue;
         if (cursor != l) continue;
@@ -1543,7 +1543,7 @@ int cli_loop(struct cli_def *cli, int sockfd) {
 
       // '?' at end of line - generate applicable 'help' messages
       if (c == '?' && cursor == l) {
-        struct cli_comphelp comphelp = {0};
+        struct cli_comphelp comphelp = {};
         int i;
         int show_cr = 1;
 
