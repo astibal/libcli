@@ -1193,7 +1193,7 @@ int cli_loop(struct cli_def *cli, int sockfd) {
       constexpr int max_events = 5;
       epoll_event ee[max_events];
 
-      sr = epoll_wait(epoll_fd, ee, max_events, tm.tv_sec * 1000);
+      sr = epoll_wait(epoll_fd, ee, max_events, tm.tv_sec * 200);
       if(sr < 0) {
           if (errno == EINTR) continue;
           perror("epoll");
