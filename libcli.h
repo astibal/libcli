@@ -53,11 +53,11 @@ namespace libcli {
         int completion_callback;
         struct cli_command *commands;
 
-        int (*auth_callback) (const char *, const char *);
+        int (*auth_callback) (cli_def*, const char *, const char *);
 
         int (*regular_callback) (struct cli_def *cli);
 
-        int (*enable_callback) (const char *);
+        int (*enable_callback) (cli_def*, const char *);
 
         char *banner;
         struct unp *users;
@@ -223,9 +223,9 @@ namespace libcli {
 
     int cli_file (struct cli_def *cli, FILE *fh, int privilege, int mode);
 
-    void cli_set_auth_callback (struct cli_def *cli, int (*auth_callback) (const char *, const char *));
+    void cli_set_auth_callback (struct cli_def *cli, int (*auth_callback) (cli_def* ,const char *, const char *));
 
-    void cli_set_enable_callback (struct cli_def *cli, int (*enable_callback) (const char *));
+    void cli_set_enable_callback (struct cli_def *cli, int (*enable_callback) (cli_def*, const char *));
 
     void cli_allow_user (struct cli_def *cli, const char *username, const char *password);
 

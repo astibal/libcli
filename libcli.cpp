@@ -227,11 +227,11 @@ char *cli_command_name(struct cli_def *cli, struct cli_command *command) {
   return name;
 }
 
-void cli_set_auth_callback(struct cli_def *cli, int (*auth_callback)(const char *, const char *)) {
+void cli_set_auth_callback(struct cli_def *cli, int (*auth_callback)(cli_def*, const char *, const char *)) {
   cli->auth_callback = auth_callback;
 }
 
-void cli_set_enable_callback(struct cli_def *cli, int (*enable_callback)(const char *)) {
+void cli_set_enable_callback(struct cli_def *cli, int (*enable_callback)(cli_def*, const char *)) {
   cli->enable_callback = enable_callback;
 }
 
@@ -1730,7 +1730,7 @@ int cli_loop(struct cli_def *cli, int sockfd) {
       free_z(password);
       if (!(password = strdup(cmd))) return 0;
       if (cli->auth_callback) {
-        if (cli->auth_callback(username, password) == CLI_OK) allowed++;
+        if (cli->auth_callback(cli, username, password) == CLI_OK) allowed++;
       }
 
       if (!allowed) {
@@ -1763,7 +1763,7 @@ int cli_loop(struct cli_def *cli, int sockfd) {
 
       if (!allowed && cli->enable_callback) {
         // Check callback
-        if (cli->enable_callback(cmd)) allowed++;
+        if (cli->enable_callback(cli, cmd)) allowed++;
       }
 
       if (allowed) {
