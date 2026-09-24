@@ -1039,7 +1039,7 @@ static int pass_matches(const char *pass, const char *attempt) {
   return !strcmp(pass, attempt);
 }
 
-#define CTRL(c) (c - '@')
+#define CLI_CTRL(c) (c - '@')
 
 static int show_prompt(struct cli_def *cli, int sockfd) {
   int len = 0;
@@ -1274,19 +1274,19 @@ int cli_loop(struct cli_def *cli, int sockfd) {
           // Remap to readline control codes
           switch (c) {
             case 'A':  // Up
-              c = CTRL('P');
+              c = CLI_CTRL('P');
               break;
 
             case 'B':  // Down
-              c = CTRL('N');
+              c = CLI_CTRL('N');
               break;
 
             case 'C':  // Right
-              c = CTRL('F');
+              c = CLI_CTRL('F');
               break;
 
             case 'D':  // Left
-              c = CTRL('B');
+              c = CLI_CTRL('B');
               break;
 
             default:
@@ -1313,16 +1313,16 @@ int cli_loop(struct cli_def *cli, int sockfd) {
         continue;
       }
 
-      if (c == CTRL('C')) {
+      if (c == CLI_CTRL('C')) {
         _write(sockfd, "\a", 1);
         continue;
       }
 
       // Back word, backspace/delete
-      if (c == CTRL('W') || c == CTRL('H') || c == 0x7f) {
+      if (c == CLI_CTRL('W') || c == CLI_CTRL('H') || c == 0x7f) {
         int back = 0;
 
-        if (c == CTRL('W')) {
+        if (c == CLI_CTRL('W')) {
           // Word
           int nc = cursor;
 
@@ -1379,7 +1379,7 @@ int cli_loop(struct cli_def *cli, int sockfd) {
       }
 
       // Redraw
-      if (c == CTRL('L')) {
+      if (c == CLI_CTRL('L')) {
         int i;
         int cursorback = l - cursor;
 
@@ -1395,7 +1395,7 @@ int cli_loop(struct cli_def *cli, int sockfd) {
       }
 
       // Clear line
-      if (c == CTRL('U')) {
+      if (c == CLI_CTRL('U')) {
         if (cli->state == STATE_PASSWORD || cli->state == STATE_ENABLE_PASSWORD)
           memset(cmd, 0, l);
         else
@@ -1406,7 +1406,7 @@ int cli_loop(struct cli_def *cli, int sockfd) {
       }
 
       // Kill to EOL
-      if (c == CTRL('K')) {
+      if (c == CLI_CTRL('K')) {
         if (cursor == l) continue;
 
         if (cli->state != STATE_PASSWORD && cli->state != STATE_ENABLE_PASSWORD) {
@@ -1422,7 +1422,7 @@ int cli_loop(struct cli_def *cli, int sockfd) {
       }
 
       // EOT
-      if (c == CTRL('D')) {
+      if (c == CLI_CTRL('D')) {
         if (cli->state == STATE_PASSWORD || cli->state == STATE_ENABLE_PASSWORD) break;
 
         if (l) continue;
@@ -1432,7 +1432,7 @@ int cli_loop(struct cli_def *cli, int sockfd) {
       }
 
       // Disable
-      if (c == CTRL('Z')) {
+      if (c == CLI_CTRL('Z')) {
         if (cli->mode != MODE_EXEC) {
           if (cli->buildmode) cli_int_free_buildmode(cli);
           cli_clear_line(sockfd, cmd, l, cursor);
@@ -1445,7 +1445,7 @@ int cli_loop(struct cli_def *cli, int sockfd) {
       }
 
       // TAB completion
-      if (c == CTRL('I')) {
+      if (c == CLI_CTRL('I')) {
         struct cli_comphelp comphelp = {};
 
         if (cli->state == STATE_LOGIN || cli->state == STATE_PASSWORD || cli->state == STATE_ENABLE_PASSWORD) continue;
@@ -1454,7 +1454,7 @@ int cli_loop(struct cli_def *cli, int sockfd) {
         cli_get_completions(cli, cmd, c, &comphelp);
         if (comphelp.num_entries == 0) {
           _write(sockfd, "\a", 1);
-        } else if (lastchar == CTRL('I')) {
+        } else if (lastchar == CLI_CTRL('I')) {
           // Double tab
           int i;
           for (i = 0; i < comphelp.num_entries; i++) {
@@ -1483,7 +1483,7 @@ int cli_loop(struct cli_def *cli, int sockfd) {
             lastchar = '\0';
           } else {
             // Yes, we had a match, but it wasn't required - remember the tab in case the user double tabs....
-            lastchar = CTRL('I');
+            lastchar = CLI_CTRL('I');
           }
         } else if (comphelp.num_entries > 1) {
           /*
@@ -1569,12 +1569,12 @@ int cli_loop(struct cli_def *cli, int sockfd) {
       }
 
       // History
-      if (c == CTRL('P') || c == CTRL('N')) {
+      if (c == CLI_CTRL('P') || c == CLI_CTRL('N')) {
         int history_found = 0;
 
         if (cli->state == STATE_LOGIN || cli->state == STATE_PASSWORD || cli->state == STATE_ENABLE_PASSWORD) continue;
 
-        if (c == CTRL('P')) {
+        if (c == CLI_CTRL('P')) {
           // Up
           in_history--;
           if (in_history < 0) {
@@ -1616,8 +1616,8 @@ int cli_loop(struct cli_def *cli, int sockfd) {
       }
 
       // Left/right cursor motion
-      if (c == CTRL('B') || c == CTRL('F')) {
-        if (c == CTRL('B')) {
+      if (c == CLI_CTRL('B') || c == CLI_CTRL('F')) {
+        if (c == CLI_CTRL('B')) {
           // Left
           if (cursor) {
             if (cli->state != STATE_PASSWORD && cli->state != STATE_ENABLE_PASSWORD) _write(sockfd, "\b", 1);
@@ -1636,7 +1636,7 @@ int cli_loop(struct cli_def *cli, int sockfd) {
         continue;
       }
 
-      if (c == CTRL('A')) {
+      if (c == CLI_CTRL('A')) {
         // Start of line
         if (cursor) {
           if (cli->state != STATE_PASSWORD && cli->state != STATE_ENABLE_PASSWORD) {
@@ -1650,7 +1650,7 @@ int cli_loop(struct cli_def *cli, int sockfd) {
         continue;
       }
 
-      if (c == CTRL('E')) {
+      if (c == CLI_CTRL('E')) {
         // End of line
         if (cursor < l) {
           if (cli->state != STATE_PASSWORD && cli->state != STATE_ENABLE_PASSWORD)
@@ -3276,7 +3276,7 @@ static void cli_get_optarg_comphelp(struct cli_def *cli, struct cli_optarg *opta
       } while (lineptr && nameptr && helpptr && (next_word && (strncmp(next_word, nameptr, strlen(next_word)))));
     } while (lineptr && nameptr && helpptr);
     free_z(working);
-  } else if (lastchar == CTRL('I')) {
+  } else if (lastchar == CLI_CTRL('I')) {
     if (get_completions) {
       (*get_completions)(cli, optarg->name, next_word, comphelp);
     } else if ((!anchor_word || !strncmp(anchor_word, optarg->name, strlen(anchor_word))) &&
